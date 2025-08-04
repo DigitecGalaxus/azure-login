@@ -6,7 +6,8 @@
   "scripts": {
     "build:main": "ncc build src/main.ts -o lib/main",
     "build:cleanup": "ncc build src/cleanup.ts -o lib/cleanup",
-    "build": "npm run build:main && npm run build:cleanup",
+    "build:pre": "ncc build src/pre.ts -o lib/pre",
+    "build": "npm run build:main && npm run build:cleanup && npm run build:pre",
     "test": "jest"
   },
   "author": "Microsoft",

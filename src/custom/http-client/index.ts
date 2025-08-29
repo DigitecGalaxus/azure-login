@@ -364,7 +364,19 @@ export class HttpClient {
 
     let response: HttpClientResponse | undefined
     do {
-      response = await this.requestRaw(info, data)
+      while (true) {
+        try {
+          response = await this.requestRaw(info, data, numTries)
+          break
+        } catch(err) {
+          numTries += 1
+          if (numTries == maxTries) {
+            throw err
+          }
+          console.warn("::warning::HTTP request failed, trying again")
+          await this._performExponentialBackoff(numTries)
+        }
+      }
 
       // Check if it's an authentication challenge
       if (
@@ -430,7 +442,7 @@ export class HttpClient {
 
         // let's make the request with the new redirectUrl
         info = this._prepareRequest(verb, parsedRedirectUrl, headers)
-        response = await this.requestRaw(info, data)
+        response = await this.requestRaw(info, data, numTries)
         redirectsRemaining--
       }
 
@@ -471,7 +483,8 @@ export class HttpClient {
    */
   async requestRaw(
     info: ifm.RequestInfo,
-    data: string | NodeJS.ReadableStream | null
+    data: string | NodeJS.ReadableStream | null,
+    attempt?: number
   ): Promise<HttpClientResponse> {
     return new Promise<HttpClientResponse>((resolve, reject) => {
       function callbackForResult(err?: Error, res?: HttpClientResponse): void {
@@ -485,7 +498,7 @@ export class HttpClient {
         }
       }
 
-      this.requestRawWithCallback(info, data, callbackForResult)
+      this.requestRawWithCallback(info, data, callbackForResult, attempt)
     })
   }
 
@@ -498,7 +511,8 @@ export class HttpClient {
   requestRawWithCallback(
     info: ifm.RequestInfo,
     data: string | NodeJS.ReadableStream | null,
-    onResult: (err?: Error, res?: HttpClientResponse) => void
+    onResult: (err?: Error, res?: HttpClientResponse) => void,
+    attempt?: number
   ): void {
     if (typeof data === 'string') {
       if (!info.options.headers) {
@@ -526,13 +540,36 @@ export class HttpClient {
     let socket: net.Socket
     req.on('socket', sock => {
       socket = sock
+
+      console.log(`[http][attempt ${attempt}] Got socket assigned`)
+      sock.on('lookup', (err, address, family, host) => {
+        if (err) {
+          console.error(`[http][attempt ${attempt}] DNS lookup error for ${host}:`, err)
+        } else {
+          console.log(`[http][attempt ${attempt}] DNS lookup success: ${address} (family ${family})`)
+        }
+      })
+
+      sock.on('connect', () => {
+        console.log(`[http][attempt ${attempt}] Socket connected`)
+      })
+
+      sock.on('timeout', () => {
+        console.warn(`[http][attempt ${attempt}] Socket timeout`)
+      })
+
+      sock.on('error', err => {
+        console.error(`[http][attempt ${attempt}] Socket error:`, err)
+      })
     })
 
     // If we ever get disconnected, we want the socket to timeout eventually
-    req.setTimeout(this._socketTimeout || 3 * 60000, () => {
-      if (socket) {
-        socket.end()
-      }
+    const timeout = this._socketTimeout || 3 * 60000
+    console.log(`[http][attempt ${attempt}] Reqest timeout is set to ${timeout} milliseconds`)
+    req.setTimeout(timeout, () => {
+      // if (socket) {
+      //   socket.end()
+      // }
       handleResult(new Error(`Request timeout: ${info.options.path}`))
     })
 

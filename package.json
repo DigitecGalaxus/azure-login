@@ -24,6 +24,8 @@
     "@actions/core": "1.11.1",
     "@actions/exec": "^1.0.1",
     "@actions/io": "^1.0.1",
-    "package-lock": "^1.0.3"
+    "package-lock": "^1.0.3",
+    "tunnel": "^0.0.6",
+    "undici": "^5.28.5"
   }
 }

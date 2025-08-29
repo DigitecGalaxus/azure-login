@@ -1,4 +1,5 @@
 import * as core from '@actions/core';
+import {OidcClient} from '../custom/core/oidc-utils';
 
 export class LoginConfig {
     static readonly AUTH_TYPE_SERVICE_PRINCIPAL = "SERVICE_PRINCIPAL";
@@ -75,7 +76,7 @@ export class LoginConfig {
 
     async getFederatedToken() {
         try {
-            this.federatedToken = await core.getIDToken(this.audience);
+            this.federatedToken = await OidcClient.getIDToken(this.audience);
             this.mask(this.federatedToken);
         }
         catch (error) {

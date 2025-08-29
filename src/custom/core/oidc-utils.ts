@@ -51,7 +51,7 @@ export class OidcClient {
       .catch(error => {
         throw new Error(
           `Failed to get ID Token. \n 
-        Error Code : ${error.statusCode}\n 
+        Error Code : ${error.code || error.statusCode}\n 
         Error Message: ${error.message}`
         )
       })

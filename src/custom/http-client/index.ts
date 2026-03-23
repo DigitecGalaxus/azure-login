@@ -280,7 +280,7 @@ export class HttpClient {
       additionalHeaders,
       Headers.ContentType,
       MediaTypes.ApplicationJson
-    )
+    ) as string
     const res: HttpClientResponse = await this.post(
       requestUrl,
       data,
@@ -304,7 +304,7 @@ export class HttpClient {
       additionalHeaders,
       Headers.ContentType,
       MediaTypes.ApplicationJson
-    )
+    ) as string
     const res: HttpClientResponse = await this.put(
       requestUrl,
       data,
@@ -328,7 +328,7 @@ export class HttpClient {
       additionalHeaders,
       Headers.ContentType,
       MediaTypes.ApplicationJson
-    )
+    ) as string
     const res: HttpClientResponse = await this.patch(
       requestUrl,
       data,

@@ -1,0 +1,8 @@
+metadata:
+  name: repo-azure-login
+  title: azure-login
+spec:
+  type: repository
+  owner: blackjack
+kind: Resource
+apiVersion: backstage.io/v1alpha1
